@@ -505,7 +505,6 @@ public class HomePieceOfFurniture extends HomeObject implements PieceOfFurniture
       this.propertyChangeSupport.firePropertyChange(Property.DESCRIPTION.name(), oldDescription, description);
     }
   }
-   
   /**
    * Returns the additional information associated to this piece, or <code>null</code>.
    * @since 4.2
