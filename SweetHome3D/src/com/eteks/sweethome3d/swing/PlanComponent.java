@@ -2002,12 +2002,48 @@ public class PlanComponent extends JComponent implements PlanView, Scrollable, P
     }
     return strokeWidth;
   }
-  
+
+  // print calls this method for each requested plan page
+  public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
+    // if there are no levels, then just use the original printing behavior
+    if (this.home.getLevels().isEmpty()) {
+      return printSelectedLevel(g, pageFormat, pageIndex);
+    }
+
+    // if a level is viewable then it should be printed
+    List<Level> viewableLevels = new ArrayList<>();
+    for (Level level : this.home.getLevels()) {
+      if (level.isViewable()) {
+        viewableLevels.add(level);
+      }
+    }
+
+    // Going through the indexes to print each level
+    if (pageIndex < 0 || pageIndex >= viewableLevels.size()) {
+      return NO_SUCH_PAGE;
+    }
+
+    // Remember which floor the user was viewing before printing so we can bring him back there later
+    Level originalLevel = this.home.getSelectedLevel();
+    try {
+      // temporarily select the floor that i want to print becasue printSelectedLevel uses
+      // whichever floor is currently selected.
+      this.home.setSelectedLevel(viewableLevels.get(pageIndex));
+
+      // start drawing from first floor
+      printSelectedLevel(g, pageFormat, 0);
+      return PAGE_EXISTS;
+    } finally {
+      // Restore the user's floor before returning, even if drawing fails.
+      this.home.setSelectedLevel(originalLevel);
+    }
+  }
+
   /**
-   * Prints this component plan at the scale given in the home print attributes or at a scale 
+   * Prints this component plan at the scale given in the home print attributes or at a scale
    * that makes it fill <code>pageFormat</code> imageable size if this attribute is <code>null</code>.
    */
-  public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
+  private int printSelectedLevel(Graphics g, PageFormat pageFormat, int pageIndex) {
     List<Selectable> printedItems = getPaintedItems(); 
     Rectangle2D printedItemBounds = getItemsBounds(g, printedItems);
     if (printedItemBounds != null) {
